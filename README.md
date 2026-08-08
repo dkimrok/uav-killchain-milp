@@ -7,6 +7,7 @@ Replication package for:
 > *Military Operations Research* (under review).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21853087.svg)](https://doi.org/10.5281/zenodo.21853087)
 
 A mixed-integer linear programming model for the joint scheduling of heterogeneous
 reconnaissance and attack UAVs across the full F2T2EA (Find–Fix–Track–Target–Engage–Assess)
