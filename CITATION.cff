@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+title: >-
+  Replication package for "Optimizing Heterogeneous UAV Cooperation in
+  Counter-Ballistic Missile Kill Chains: A MILP Approach with Design of
+  Experiments"
+message: >-
+  If you use this software or the data it produces, please cite both the
+  software (this record) and the accompanying paper.
+type: software
+authors:
+  - family-names: Kim
+    given-names: Dongjin
+    affiliation: Korea Institute for Defense Analyses
+    # orcid: 'https://orcid.org/0000-0000-0000-0000'   # <-- fill in before release
+  - family-names: Kim
+    given-names: Jonghoe
+    affiliation: Korea Institute for Defense Analyses
+    # orcid: 'https://orcid.org/0000-0000-0000-0000'   # <-- fill in before release
+repository-code: 'https://github.com/dkimrok/uav-killchain-milp'
+abstract: >-
+  Mixed-integer linear programming model and full replication pipeline for the
+  joint scheduling of heterogeneous reconnaissance and attack UAVs across the
+  F2T2EA kill chain under reconnaissance-triggered endogenous time windows.
+  Includes the instance generator, the joint model, the two-stage 2^3 factorial
+  experiment driver, the analysis pipeline that regenerates every table in the
+  paper, and the raw per-run results for all 108 certified-optimal solver runs.
+keywords:
+  - mixed-integer linear programming
+  - kill chain
+  - unmanned aerial vehicles
+  - vehicle routing problem with time windows
+  - weapon-target assignment
+  - design of experiments
+  - military operations research
+license: MIT
+version: 1.0.0
+date-released: '2026-08-09'
+# doi: 10.5281/zenodo.XXXXXXX      # <-- Zenodo concept DOI, added after first release
+preferred-citation:
+  type: article
+  title: >-
+    Optimizing Heterogeneous UAV Cooperation in Counter-Ballistic Missile Kill
+    Chains: A MILP Approach with Design of Experiments
+  authors:
+    - family-names: Kim
+      given-names: Dongjin
+    - family-names: Kim
+      given-names: Jonghoe
+  journal: Military Operations Research
+  year: 2026
+  # volume / issue / start / end / doi to be completed on acceptance

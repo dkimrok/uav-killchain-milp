@@ -1,0 +1,5 @@
+N_P,v_A,dk,seed,mode,status,proven,max_gap,sv,hr,sec
+6,300,3,42,zone,kNotset/kNotset+heur,False,inf,27.0,0.125,0.1
+6,300,9,42,zone,kNotset+heur,False,inf,95.0,0.6667,0.1
+6,1110,3,42,zone,kNotset+heur,False,inf,141.0,1.0,0.1
+6,1110,9,42,zone,kNotset+heur,False,inf,141.0,1.0,0.1

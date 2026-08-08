@@ -1,0 +1,3 @@
+response,factorial_mean,center_mean,n_F,n_C,SS_curvature,MS_pure_error,df_error,F,p,verdict
+sv,116.625,136.6667,48,6,2142.2315,431.67407,45,4.963,0.03095,significant curvature
+hr,0.8646,1.0,48,6,0.0978,0.01157,45,8.45,0.00565,significant curvature

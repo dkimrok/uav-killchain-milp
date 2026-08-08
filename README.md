@@ -1,2 +1,265 @@
-# uav-killchain-milp
-Heterogeneous UAV Killchain MILP(Military Operations Research Journal)
+# Heterogeneous UAV Kill Chain Optimization under Endogenous Time Windows
+
+Replication package for:
+
+> **Optimizing Heterogeneous UAV Cooperation in Counter-Ballistic Missile Kill Chains: A MILP Approach with Design of Experiments**
+> Dongjin Kim and Jonghoe Kim, Korea Institute for Defense Analyses.
+> *Military Operations Research* (under review).
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+A mixed-integer linear programming model for the joint scheduling of heterogeneous
+reconnaissance and attack UAVs across the full F2T2EA (Find–Fix–Track–Target–Engage–Assess)
+kill chain, together with the two-stage 2³ full factorial design of experiments used to
+analyse it.
+
+Every number in the paper is produced by this repository. The 108-run design reproduces
+in about **fifteen minutes** on a desktop workstation, and every run is a **certified
+optimum**.
+
+---
+
+## What the model does
+
+The defining feature is that **engagement time windows are endogenous**. In a standard
+vehicle routing problem with time windows the interval `[e_k, l_k]` is data. Here it is
+not: the window of target *k* opens at `D_{p_k}`, the completion time of the reconnaissance
+visit to its parent point, which is itself a decision of the reconnaissance routing
+subproblem.
+
+Attack UAVs hold on station at the outer corner of their assigned zone, launch on the
+reconnaissance completion signal, accumulate travel and servicing time along the strike
+sequence, and may loiter for at most `W_max` minutes if they reach a target before its
+window opens.
+
+That last detail is what makes the coupling substantive. Had the sequential arrival bound
+been written against each target's own window opening rather than against the predecessor's
+arrival time, `D_{p_k}` would cancel from the feasibility condition, the attack subproblem
+would become independent of the reconnaissance schedule, and the joint model would collapse
+into two separable problems. Writing it cumulatively prevents that. The effect is large:
+fixing reconnaissance to a nearest-neighbour tour while leaving everything else free costs
+a third of the hit ratio at one representative configuration.
+
+**Two-phase lexicographic objective.** Reconnaissance coverage holds strict priority over
+strike value:
+
+```
+Phase 1   Z1* = max  Σ_p w_p Σ_r z_{r,p}
+Phase 2   max  Σ_a Σ_k v_k h_{a,k} + ε Σ_a Σ_k h_{a,k}     s.t.  Σ_p w_p Σ_r z_{r,p} ≥ Z1*
+```
+
+Earlier versions folded both stages into one objective weighted by `M = Σ v_k + 1`. That
+inflates the objective to the order of 10⁴–10⁵, so the solver's default relative gap of
+`1e-4` corresponds to several units of strike value — large enough to terminate with a
+suboptimal answer while reporting `Optimal`. The two-phase form keeps the Phase-2 objective
+at the order of 10². The `ε Σ h` term breaks ties by number of targets engaged; without it
+the hit ratio is not uniquely determined, because the objective maximises value while the
+reported response is a count.
+
+### Fixed platform parameters
+
+| | value |
+|---|---|
+| Operational area | 100 × 100 km, four 50 × 50 km BMOA zones |
+| Attack holding points | zone corners (0,0), (100,0), (0,100), (100,100) — one UAV per zone |
+| Reconnaissance base | common, (0,0) |
+| `v_R` | 4.333 km/min (260 km/h) |
+| `F_R`, `F_A` | 1,196 km / 1,665 km |
+| `W` | 8 weapons per attack UAV |
+| `n_R` | 4 reconnaissance UAVs, one per zone |
+| `s` | 1 min servicing time per engagement |
+| `W_max` | 2 min maximum loiter |
+| `T_pp` | 1 target per reconnaissance point |
+| Target value `v_k` | Uniform integer [1, 10] |
+| Window `Δ_k` | Uniform integer [`Δk_min`, `Δk_min` + 2] min |
+
+Reconnaissance range is far from binding: per-UAV full-coverage tours run 246 km on average
+and 320 km at worst against a 1,196 km budget, so Phase 1 always attains full coverage.
+
+---
+
+## Repository layout
+
+```
+.
+├── src/
+│   ├── killchain_auto.py      Instance generator (zones, points, targets, windows)
+│   ├── joint_model.py         The model. Joint reconnaissance + attack, per zone
+│   ├── run_experiments.py     Experiment driver, checkpointed and resumable
+│   ├── make_tables.py         Regenerates every table in the paper
+│   ├── make_figures.py        Regenerates Figures 1–4
+│   ├── feasibility_test.py    Tractability probe across N_P levels
+│   ├── gap_probe.py           Diagnostic: does more time actually help?
+│   └── legacy/                Superseded versions, retained for audit
+├── results/
+│   ├── expI_raw.csv           Experiment I, one row per (design cell × seed)
+│   ├── expII_raw.csv          Experiment II, same schema
+│   ├── sensitivity_wmax.csv   Loiter-cap sensitivity, 60 runs
+│   ├── feasibility_probe.csv  Tractability probe output
+│   └── legacy/                Results from superseded formulations
+├── tables/                    Generated by make_tables.py
+├── figures/                   Generated by make_figures.py, grayscale 300 dpi
+├── CITATION.cff
+├── CHANGELOG.md
+└── LICENSE
+```
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/dkimrok/uav-killchain-milp.git
+cd uav-killchain-milp
+python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Python 3.9 or later. HiGHS ships with the `highspy` package; no separate solver binary is
+required.
+
+---
+
+## Reproducing the paper
+
+```bash
+cd src
+python run_experiments.py --exp I  --out ../results --threads 16
+python run_experiments.py --exp II --out ../results --threads 16
+python make_tables.py ../results/expI_raw.csv  --exp I  --out ../tables
+python make_tables.py ../results/expII_raw.csv --exp II --out ../tables
+python make_figures.py
+```
+
+Experiment I takes about 2.5 minutes and Experiment II about 11.4 minutes on eight cores.
+Both drivers append to their CSV and skip cells already recorded as proven, so an
+interrupted run can simply be reissued.
+
+**Read the `proven` column.** PuLP maps the HiGHS `kTimeLimit` termination code to
+`LpStatusOptimal`, so a run that merely exhausted its time budget is indistinguishable from
+a certified optimum at the modelling layer. `joint_model.py` reads `HighsModelStatus`
+directly and a design cell is accepted only when every zone subproblem returns `kOptimal`.
+`run_experiments.py` prints any unproven rows at the end; that list must be empty before
+the tables mean anything.
+
+### Design
+
+Each experiment is a 2³ full factorial over attack speed `v_A`, window minimum `Δk_min`, and
+reconnaissance points per zone `N_P`, plus a centre point, replicated over six seeds
+`[42, 99, 314, 7, 21, 137]` — 54 runs each, 108 in total.
+
+| | Low | Centre | High |
+|---|---|---|---|
+| `v_A` (km/h) | 300 | 600 | 1,110 |
+| `Δk_min` (min) | 3 | 6 | 9 |
+| `N_P`, Experiment I | 4 | 6 | 8 |
+| `N_P`, Experiment II | 6 | 8 | 10 |
+
+The centre point runs **once per seed**. Because the generator and the solver are both
+deterministic, repeated runs at identical settings are byte-identical duplicates rather than
+independent replications, and counting them would inflate the pure-error degrees of freedom.
+Experiment II's centre sits at `W / N_P = 1.000` exactly, on the munition-sufficiency
+boundary.
+
+### Statistical methods
+
+`make_tables.py` is the single source of every reported statistic, and documents its methods
+in its own docstring:
+
+- **Main effects and interactions** — saturated 2³ factorial model,
+  `SS = contrast² / (n · 2^k)`, tested against pure error with `2^k(n−1)` degrees of freedom.
+  Not one-way ANOVA, which uses a different error term and gives materially different F.
+- **Curvature** — Montgomery's test, `SS = n_F n_C (ȳ_F − ȳ_C)² / (n_F + n_C)` against pooled
+  pure error, applied identically to both responses in both experiments.
+- **Missing cells** — never imputed. The script warns and reports the design as unbalanced.
+  Cell-mean substitution shrinks pure error and inflates F.
+
+---
+
+## Data dictionary
+
+`results/exp*_raw.csv`, one row per (design cell × seed):
+
+| column | meaning |
+|---|---|
+| `exp` | `I` or `II` |
+| `v_A`, `dk_min`, `N_P` | design factors |
+| `WoverNP` | weapon-to-target ratio `W / N_P` |
+| `seed` | replication seed |
+| `ptype` | `factorial` or `center` |
+| `status` | solver status, read from HiGHS |
+| `proven` | `True` only if every zone subproblem certified optimality |
+| `max_gap` | worst relative MIP gap across the zone subproblems |
+| `sv` | strike value, the sum of engaged target values |
+| `hr` | hit ratio, `n_hit / n_K` |
+| `rr` | reconnaissance coverage ratio |
+| `n_hit`, `n_K` | targets engaged / total targets |
+| `n_exp`, `n_P` | points surveyed / total points |
+| `weapon_bind` | fraction of attack UAVs at weapon capacity |
+| `sec` | wall-clock solve time |
+
+`results/sensitivity_wmax.csv` adds a `wmax` column; `results/feasibility_probe.csv` records
+the tractability probe.
+
+---
+
+## Tractability
+
+Solve time concentrates in the low-speed narrow-window corner, and the reason is structural.
+There the difficulty is not finding a good solution but **certifying that no engagement is
+possible**: at `v_A = 300`, `Δk_min = 3`, `N_P = 10`, two of the four zones contain no target
+satisfying the launch reachability condition `d_{0_a,k} / v_A ≤ Δ_k`, so their optimal value
+is zero. Without the departure-linking inequality the solver explored 665,869 nodes in 900 s
+without certifying this; with it the same cell certifies in 19.8 s.
+
+Two probes are provided. `feasibility_test.py` sweeps `N_P` levels and prints PASS / MARGIN /
+FAIL. `gap_probe.py` re-solves one cell at increasing time limits and reports whether the gap
+is actually closing — if it is not, more time will not help and the formulation is the thing
+to change.
+
+```bash
+python feasibility_test.py 1800 16          # seconds per subproblem, threads
+python gap_probe.py 300 3 10 zone 16        # v_A  dk  N_P  recon_mode  threads
+```
+
+---
+
+## Citation
+
+Please cite both the software and the paper. Machine-readable metadata is in
+[`CITATION.cff`](CITATION.cff).
+
+```bibtex
+@software{kim_uav_killchain_code_2026,
+  author  = {Kim, Dongjin and Kim, Jonghoe},
+  title   = {Replication package for "Optimizing Heterogeneous UAV Cooperation in
+             Counter-Ballistic Missile Kill Chains: A MILP Approach with Design of
+             Experiments"},
+  year    = {2026},
+  version = {1.0.0},
+  doi     = {10.5281/zenodo.XXXXXXX},
+  url     = {https://github.com/dkimrok/uav-killchain-milp}
+}
+
+@article{kim_uav_killchain_2026,
+  author  = {Kim, Dongjin and Kim, Jonghoe},
+  title   = {Optimizing Heterogeneous {UAV} Cooperation in Counter-Ballistic Missile
+             Kill Chains: A {MILP} Approach with Design of Experiments},
+  journal = {Military Operations Research},
+  year    = {2026},
+  note    = {Under review}
+}
+```
+
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Disclaimer
+
+The views expressed in this repository are those of the authors and do not reflect the
+official policy or position of the Korea Institute for Defense Analyses, the Republic of
+Korea Ministry of National Defense, or the Government of the Republic of Korea. All model
+inputs are based on open, publicly available sources. This material is unclassified.
