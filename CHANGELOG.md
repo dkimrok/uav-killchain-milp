@@ -48,6 +48,21 @@ the changes below are recorded because they alter reported results.
   runs at identical settings are byte-identical duplicates.
 - 108 runs total (54 per experiment), all certified optimal.
 
+### Validation and provenance
+
+- `run_extension.py` re-runs the four factorial corners at a single target density outside
+  the main design. At `N_P = 12` all 24 runs certify and the 18 non-degenerate ones attain
+  `W / N_P = 0.666667` with zero variance (`results/extension_np12.csv`), giving a fourth
+  density at which the ceiling is reached exactly. An attempt at `N_P = 14` is retained in
+  `results/extension_np14.csv` with `proven == False` on the uncertified rows; it marks the
+  boundary of certifiable density under this formulation and is excluded from analysis.
+- `results/legacy/provenance_2026-03/` archives the raw output of the March and June 2026
+  model versions, including the reconnaissance-count screening design. That screening is
+  the basis of a claim made in an early draft and later withdrawn: 21 of its 33 runs did
+  not certify optimality, its centre point returned three different values for one seed
+  under a deterministic model, and at the low density both factor levels sat at the
+  response ceiling. The archive README documents this in full.
+
 ### Analysis
 
 - `make_tables.py` is the single source of every number in the paper's results

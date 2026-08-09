@@ -109,9 +109,14 @@ fig.savefig(os.path.join(OUT,'Figure_3.png')); plt.close(fig)
 
 # ---------------- Figure IV-2: structural ceiling ------------------------------
 fig,ax=plt.subplots(figsize=(4.9,3.2))
-r=np.linspace(0.6,2.2,400)
+r=np.linspace(0.55,2.2,400)
 ax.plot(r,np.minimum(1.0,r),'-',color='0.35',lw=1.2,label='Ceiling  $\\min(1,\\,W/N_P)$')
-allr=pd.concat([raw['I'],raw['II']],ignore_index=True)
+ext=[]
+for f in sorted(os.listdir(RES)):
+    if f.startswith('extension_np') and f.endswith('.csv'):
+        e=pd.read_csv(os.path.join(RES,f))
+        if bool(e.proven.all()): ext.append(e)
+allr=pd.concat([raw['I'],raw['II']]+ext,ignore_index=True)
 fac=allr[allr.ptype=='factorial']
 ceil_x=[];ceil_y=[];low_x=[];low_y=[]
 for NP in sorted(fac.N_P.unique()):
@@ -123,13 +128,14 @@ ax.scatter(low_x,low_y,s=52,marker='v',facecolors='white',edgecolors='k',lw=1.1,
            label='Low-speed narrow-window corner')
 for x,y in zip(low_x,low_y):
     ax.vlines(x,y,min(1.0,x),color='0.7',lw=0.7,ls=':')
-for x,lab in zip(ceil_x,['$N_P$=4','6','8','10']):
+for x,lab in zip(ceil_x,[('$N_P$=%d'%np_) if i==0 else str(np_)
+                          for i,np_ in enumerate(sorted(fac.N_P.unique()))]):
     ax.annotate(lab,(x,1.028 if x>=1 else 0.828),ha='center',fontsize=8,color='0.3')
 ax.axvline(1.0,color='0.6',lw=0.8,ls='-.')
 ax.text(1.42,0.285,'munition surplus',fontsize=8,color='0.3',ha='center')
-ax.text(0.87,0.285,'munition binding',fontsize=8,color='0.3',ha='center')
+ax.text(0.80,0.285,'munition binding',fontsize=8,color='0.3',ha='center')
 ax.set_xlabel('Weapon-to-target ratio  $W/N_P$'); ax.set_ylabel('Hit Ratio')
-ax.set_xlim(0.62,2.18); ax.set_ylim(0.24,1.10)
+ax.set_xlim(0.58,2.18); ax.set_ylim(0.24,1.10)
 ax.invert_xaxis()
 ax.legend(frameon=False,fontsize=8,loc='center left')
 ax.grid(color='0.92',lw=0.6); ax.set_axisbelow(True)

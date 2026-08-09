@@ -1,0 +1,10 @@
+exp,v_A,dk_min,N_P,WoverNP,seed,ptype,status,proven,max_gap,obj,sv,hr,rr,n_hit,n_K,n_exp,n_P,weapon_bind,sec
+EXT,300,9,14,0.5714,42,factorial,Optimal,True,0.0,,215.0,0.571429,1.0,32,56,56,56,1.0,18.4
+EXT,300,9,14,0.5714,99,factorial,Optimal,True,0.0,,228.0,0.571429,1.0,32,56,56,56,1.0,15.3
+EXT,300,9,14,0.5714,314,factorial,Optimal,True,0.0,,223.0,0.571429,1.0,32,56,56,56,1.0,29.5
+EXT,300,9,14,0.5714,7,factorial,Optimal,True,0.0,,222.0,0.571429,1.0,32,56,56,56,1.0,32.6
+EXT,300,9,14,0.5714,21,factorial,Optimal,True,0.0,,280.0,0.571429,1.0,32,56,56,56,1.0,52.7
+EXT,300,9,14,0.5714,137,factorial,Optimal,True,0.0,,247.0,0.571429,1.0,32,56,56,56,1.0,64.8
+EXT,1110,3,14,0.5714,42,factorial,Optimal/TimeLimit(no incumbent)+heur,False,inf,,213.0,0.571429,1.0,32,56,56,56,1.0,2669.6
+EXT,1110,3,14,0.5714,99,factorial,Optimal/TimeLimit(no incumbent)+heur,False,inf,,228.0,0.571429,1.0,32,56,56,56,1.0,2026.1
+EXT,1110,3,14,0.5714,314,factorial,Optimal,True,0.0,,223.0,0.571429,1.0,32,56,56,56,1.0,1477.5
